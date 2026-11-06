@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Developer · Find Businesses With No Website</title>
+<meta name="description" content="Pick any location on the world map, list local businesses with no website, see their phone numbers and a potential rating for your ₹800 website deal.">
+<meta name="theme-color" content="#F6F0E4">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8D%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#F6F0E4;
+  --bg2:#EDE3D0;
+  --ink:#24211D;
+  --muted:#6B6358;
+  --accent:#C2512D;
+  --accent-dark:#9A3C1D;
+  --leaf:#3F6B52;
+  --line:#D9CDB6;
+  --radius:16px;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;font-size:17px}
+img,svg{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);line-height:1.12;letter-spacing:-.01em}
+.wrap{width:min(1180px,92%);margin-inline:auto}
+section{padding:100px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:999px;font-weight:700;font-family:var(--sans);font-size:1rem;text-decoration:none;border:2px solid var(--accent);cursor:pointer;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn-fill{background:var(--accent);color:#FFF8EE}
+.btn-fill:hover{background:var(--accent-dark)}
+.btn-line{background:transparent;color:var(--accent)}
+.btn-sm{padding:9px 16px;font-size:.9rem}
+.btn[disabled]{opacity:.5;cursor:wait}
+
+header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.logo{font-family:var(--serif);font-weight:700;font-size:1.25rem;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#FFF8EE;display:grid;place-items:center;font-style:normal;font-size:.9rem}
+nav{display:flex;gap:26px}
+nav a{text-decoration:none;font-weight:500;font-size:.97rem}
+nav a:hover{color:var(--accent)}
+.burger{display:none;background:none;border:2px solid var(--ink);border-radius:10px;width:44px;height:44px;cursor:pointer;font-size:1.3rem;color:var(--ink)}
+
+.hero{padding:70px 0 100px;position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:60px;align-items:center}
+.eyebrow{font-weight:700;color:var(--leaf);letter-spacing:.12em;text-transform:uppercase;font-size:.8rem;margin-bottom:18px}
+.hero h1{font-size:clamp(2.3rem,5.4vw,4.1rem);margin-bottom:22px}
+.hero h1 em{color:var(--accent);font-style:italic}
+.hero p.lead{font-size:1.15rem;color:var(--muted);max-width:540px;margin-bottom:12px}
+.proof{font-size:.95rem;font-weight:700;margin-bottom:30px}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+.hero-art{background:var(--bg2);border-radius:var(--radius) var(--radius) 120px var(--radius);padding:30px;border:1px solid var(--line);transform:rotate(2deg)}
+.hero-art svg{width:100%;height:auto}
+
+.strip{background:var(--ink);color:var(--bg);padding:50px 0}
+.strip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+.stat b{font-family:var(--serif);font-size:2.4rem;display:block;color:#F2B58F}
+.stat span{font-size:.95rem;opacity:.85}
+
+.tool-head{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:end;margin-bottom:40px}
+.tool-head h2{font-size:clamp(1.9rem,4vw,2.9rem)}
+.tool-head p{color:var(--muted)}
+.controls{display:grid;grid-template-columns:2fr 1.2fr auto auto;gap:12px;align-items:center;margin-bottom:14px}
+.controls input[type=text],.controls input[type=number],.controls select,.opts select,.opts input[type=number]{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#FBF7EE;font:inherit;color:var(--ink)}
+.controls input:focus,.controls select:focus,.opts select:focus,.opts input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.opts{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:18px;font-size:.95rem}
+.opts label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.opts select{width:auto}
+.opts input[type=number]{width:76px}
+.status{min-height:26px;font-weight:700;color:var(--leaf);margin-bottom:14px}
+.status.err{color:var(--accent-dark)}
+.tool-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start}
+#map{height:640px;border-radius:var(--radius);border:1px solid var(--line);z-index:1}
+.results{max-height:640px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+.card{background:#FBF7EE;border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card:nth-child(3n+2){background:var(--bg2)}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card h3{font-size:1.1rem;margin-bottom:2px}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;background:var(--leaf);color:#F6F0E4;padding:2px 10px;border-radius:999px;margin-bottom:8px;text-transform:capitalize}
+.pot{text-align:right;flex-shrink:0}
+.stars{color:var(--accent);letter-spacing:2px;font-size:1rem;line-height:1}
+.stars s{text-decoration:none;color:var(--line)}
+.lvl{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.lvl.hot{color:var(--accent-dark)}
+.lvl.warm{color:var(--leaf)}
+.lvl.cold{color:var(--muted)}
+.card p{font-size:.9rem;color:var(--muted);margin-bottom:6px}
+.why{font-size:.82rem;font-style:italic;margin-bottom:10px}
+.numline{font-weight:700;color:var(--ink);font-size:.95rem;margin-bottom:8px}
+.card .acts{display:flex;gap:8px;flex-wrap:wrap}
+.empty{padding:30px;border:2px dashed var(--line);border-radius:var(--radius);color:var(--muted);text-align:center}
+
+.how{background:var(--bg2);position:relative}
+.how-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:22px;margin-top:44px}
+.step{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+.step:nth-child(1){grid-column:span 5}
+.step:nth-child(2){grid-column:span 7;margin-top:36px}
+.step:nth-child(3){grid-column:span 7;margin-top:-10px}
+.step:nth-child(4){grid-column:span 5;margin-top:26px}
+.step .n{font-family:var(--serif);font-size:3rem;color:var(--accent);line-height:1}
+.step h3{margin:8px 0}
+.step p{color:var(--muted)}
+.how h2{font-size:clamp(1.9rem,4vw,2.9rem);max-width:640px}
+.breaker{margin:90px -4vw 0;background:var(--accent);color:#FFF8EE;padding:50px 6vw;border-radius:var(--radius);transform:rotate(-1.2deg)}
+.breaker p{font-family:var(--serif);font-size:clamp(1.3rem,3vw,2rem);max-width:900px}
+
+.pitch-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:40px}
+.pitch-list{list-style:none;border-top:1px solid var(--line)}
+.pitch-list li{display:flex;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid var(--line);font-weight:500}
+.pitch-list li span{color:var(--muted);font-weight:400;font-size:.95rem;text-align:right}
+.pitch-list li.total{font-family:var(--serif);font-size:1.3rem;font-weight:700}
+.pitch-list li.total span{color:var(--accent);font-size:1.3rem;font-weight:700}
+.pitch h2{font-size:clamp(1.9rem,4vw,2.9rem)}
+.note{background:var(--bg2);border-left:5px solid var(--accent);padding:22px;border-radius:0 var(--radius) var(--radius) 0;font-size:.95rem}
+
+footer{background:var(--ink);color:var(--bg);padding:80px 0 120px}
+.foot-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:50px;align-items:center}
+footer h2{font-size:clamp(1.8rem,4vw,2.6rem);margin-bottom:10px}
+footer p{opacity:.8}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
+.foot-links a{text-decoration:none;opacity:.85}
+.foot-links a:hover{opacity:1;text-decoration:underline}
+.credit{margin-top:50px;padding-top:24px;border-top:1px solid #4a443c;font-size:.85rem;text-transform:lowercase;opacity:.85}
+
+.mbar{display:none}
+
+@media(max-width:1080px){
+  .tool-grid,.hero-grid,.tool-head,.pitch-grid,.foot-grid{grid-template-columns:1fr}
+  .controls{grid-template-columns:1fr 1fr}
+  .controls input[type=text]{grid-column:1/-1}
+  .hero-art{max-width:420px}
+  .results{max-height:none}
+}
+@media(max-width:820px){
+  section{padding:80px 0}
+  nav{display:none;position:absolute;top:68px;left:0;right:0;background:var(--bg);flex-direction:column;padding:20px 4%;gap:16px;border-bottom:1px solid var(--line)}
+  nav.open{display:flex}
+  .burger{display:block}
+  .strip-grid{grid-template-columns:1fr 1fr}
+  .step:nth-child(n){grid-column:1/-1;margin-top:0}
+  #map{height:420px}
+  .mbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--bg);padding:10px 4%;border-top:1px solid var(--line)}
+  .mbar .btn{width:100%}
+  .head-cta{display:none}
+}
+@media(max-width:520px){
+  body{font-size:16px}
+  .controls{grid-template-columns:1fr}
+  .hero{padding:40px 0 70px}
+  .breaker{margin-inline:0}
+  .pitch-list li{flex-direction:column;gap:2px}
+  .pitch-list li span{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a href="#top" class="logo"><i>W</i>Web Developer</a>
+    <nav id="nav" aria-label="Main">
+      <a href="#finder">Finder</a>
+      <a href="#how">How it works</a>
+      <a href="#pitch">My deal</a>
+      <a href="#contact">About</a>
+    </nav>
+    <div class="head-cta cta-row">
+      <a class="btn btn-fill btn-sm" href="#finder">Find leads</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Lead finder for web developers</p>
+      <h1>Find local businesses that have <em>no website</em>, anywhere on the map.</h1>
+      <p class="lead">Pick any place in the world, tap one button, and get a ranked list with phone numbers and a potential rating for your ₹800 website deal.</p>
+      <p class="proof">Free to use · Works worldwide · Phone list + CSV export</p>
+      <div class="cta-row">
+        <a class="btn btn-fill" href="#finder">Start searching</a>
+        <a class="btn btn-line" href="#pitch">See my deal</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs><pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#D9CDB6" stroke-width="1"/></pattern></defs>
+        <rect width="300" height="300" fill="url(#g)"/>
+        <path d="M0 210 C90 160 150 250 300 120" fill="none" stroke="#3F6B52" stroke-width="10" stroke-linecap="round" opacity=".5"/>
+        <g fill="#C2512D"><path d="M90 60a22 22 0 1 1 44 0c0 20-22 44-22 44S90 80 90 60z"/><circle cx="112" cy="60" r="8" fill="#F6F0E4"/></g>
+        <g fill="#24211D"><path d="M190 140a16 16 0 1 1 32 0c0 15-16 32-16 32s-16-17-16-32z"/><circle cx="206" cy="140" r="6" fill="#F6F0E4"/></g>
+        <g fill="#3F6B52"><path d="M50 200a14 14 0 1 1 28 0c0 13-14 28-14 28s-14-15-14-28z"/><circle cx="64" cy="200" r="5" fill="#F6F0E4"/></g>
+        <rect x="150" y="210" width="120" height="56" rx="10" fill="#FBF7EE" stroke="#24211D" stroke-width="2"/>
+        <text x="164" y="233" font-family="Manrope,sans-serif" font-size="13" font-weight="700" fill="#24211D">No website</text>
+        <text x="164" y="252" font-family="Manrope,sans-serif" font-size="11" fill="#C2512D">★★★★★ potential</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<div class="strip">
+  <div class="wrap strip-grid">
+    <div class="stat"><b>World</b><span>Search any place on the map</span></div>
+    <div class="stat"><b>★ 1–5</b><span>potential rating for every lead</span></div>
+    <div class="stat"><b>₹800</b><span>your website deal price</span></div>
+    <div class="stat"><b>CSV</b><span>numbers and ratings in one file</span></div>
+  </div>
+</div>
+
+<section id="finder">
+  <div class="wrap">
+    <div class="tool-head">
+      <h2>Choose a location. Find the gaps.</h2>
+      <p>Type a place name or drag and zoom the map. Press “Search this area”. Best leads appear first, with their phone number and a potential rating.</p>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="place" placeholder="Search a city, area or country (e.g. Indore, Sarafa Bazaar)" aria-label="Search location">
+      <select id="cat" aria-label="Business category">
+        <option value="all">All categories</option>
+        <option value="shop">Shops</option>
+        <option value="food">Restaurants, cafes, sweets</option>
+        <option value="beauty">Salons and beauty</option>
+        <option value="craft">Craftsmen and workshops</option>
+        <option value="health">Clinics and pharmacies</option>
+        <option value="office">Offices and services</option>
+      </select>
+      <button class="btn btn-line" id="goBtn" type="button">Go to place</button>
+      <button class="btn btn-fill" id="searchBtn" type="button">Search this area</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="onlyPhone" checked> Only with phone number</label>
+      <label>Min potential
+        <select id="minPot" aria-label="Minimum potential">
+          <option value="1">Any</option>
+          <option value="3">3★ and up</option>
+          <option value="4">4★ and up</option>
+          <option value="5">5★ only</option>
+        </select>
+      </label>
+      <label>Country code +<input type="number" id="dcc" value="91" min="1" max="999" aria-label="Default country code"></label>
+      <button class="btn btn-line btn-sm" id="copyBtn" type="button">Copy numbers</button>
+      <button class="btn btn-line btn-sm" id="csvBtn" type="button">Export CSV</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite">Map is ready. Zoom in to a neighbourhood and search.</p>
+
+    <div class="tool-grid">
+      <div id="map" aria-label="World map"></div>
+      <div class="results" id="results"><div class="empty">Your ranked list will appear here.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="wrap">
+    <p class="eyebrow">How it works</p>
+    <h2>Four steps from map to first sale.</h2>
+    <div class="how-grid">
+      <div class="step"><div class="n">1</div><h3>Pick a place</h3><p>Search any location worldwide or pan and zoom the map to a neighbourhood.</p></div>
+      <div class="step"><div class="n">2</div><h3>Search this area</h3><p>The tool checks named businesses in the visible map area and keeps the ones that list no website.</p></div>
+      <div class="step"><div class="n">3</div><h3>Read the potential rating</h3><p>Each lead gets 1 to 5 stars. Having a phone number, opening hours, an address, social pages and a busy business type all raise the score.</p></div>
+      <div class="step"><div class="n">4</div><h3>Call or WhatsApp</h3><p>Tap Call or WhatsApp. The message already mentions your ₹800 website offer. Or copy every number in one go.</p></div>
+    </div>
+    <div class="breaker"><p>A business with no website is a business waiting for its first customer from Google. For ₹800, that is an easy yes.</p></div>
+  </div>
+</section>
+
+<section class="pitch" id="pitch">
+  <div class="wrap">
+    <h2>My deal: a website for ₹800.</h2>
+    <div class="pitch-grid">
+      <ul class="pitch-list">
+        <li>One-page business website <span>Fast, mobile-first, local</span></li>
+        <li>Click-to-call and WhatsApp buttons <span>Customers act in one tap</span></li>
+        <li>Google Maps embed and opening hours <span>Easy to find, easy to visit</span></li>
+        <li>Photo gallery and reviews <span>Builds trust before the first visit</span></li>
+        <li class="total">Everything above <span>₹800</span></li>
+      </ul>
+      <div class="note">
+        <p><strong>How potential is rated.</strong> 5★ leads are reachable by phone, have hours and an address listed, are in a category that lives on walk-in customers (salons, food, clinics, shops) and often have a social page already. They are the most likely to say yes to ₹800. 1★ and 2★ leads have little information, so call them last.</p>
+        <p style="margin-top:12px"><strong>About the data.</strong> Results come from OpenStreetMap, a free community map, not Google’s database. Some businesses may be missing, and some may have a website nobody added. Use the “Check on Google Maps” link on each card to verify before contacting. Please be polite and respect a “no”.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Web Developer</h2>
+        <p>Find the businesses that need a website, then help them get one for ₹800.</p>
+        <div class="foot-links">
+          <a href="#finder">Finder</a>
+          <a href="#how">How it works</a>
+          <a href="#pitch">My deal</a>
+          <a href="#top">Back to top</a>
+        </div>
+      </div>
+      <div><a class="btn btn-fill" href="#finder" style="width:100%;padding:20px;font-size:1.15rem">Find businesses with no website</a></div>
+    </div>
+    <p class="credit">built with ❤️ by 21.coders · © <span id="yr"></span></p>
+  </div>
+</footer>
+
+<div class="mbar">
+  <button class="btn btn-fill" type="button" id="mSearch">Search area</button>
+  <button class="btn btn-line" type="button" id="mCopy">Copy numbers</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  var nav=document.getElementById('nav'),burger=document.getElementById('burger');
+  burger.addEventListener('click',function(){var o=nav.classList.toggle('open');burger.setAttribute('aria-expanded',o)});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A'){nav.classList.remove('open');burger.setAttribute('aria-expanded',false)}});
+
+  var statusEl=document.getElementById('status'),resEl=document.getElementById('results');
+  function say(t,err){statusEl.textContent=t;statusEl.className='status'+(err?' err':'')}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+  if(typeof L==='undefined'){say('The map library could not load. Check your internet connection and refresh.',true);return}
+
+  var map=L.map('map').setView([22.7196,75.8577],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  var layer=L.layerGroup().addTo(map);
+  var data=[];
+
+  var NOWEB='[!"website"][!"contact:website"][!"url"]';
+  var CATS={
+    shop:'nwr["name"]["shop"]'+NOWEB,
+    food:'nwr["name"]["amenity"~"^(restaurant|cafe|fast_food|bar|ice_cream|food_court)$"]'+NOWEB,
+    beauty:'nwr["name"]["shop"~"^(hairdresser|beauty|cosmetics|massage|tattoo)$"]'+NOWEB,
+    craft:'nwr["name"]["craft"]'+NOWEB,
+    health:'nwr["name"]["amenity"~"^(clinic|dentist|doctors|pharmacy|veterinary)$"]'+NOWEB,
+    office:'nwr["name"]["office"]'+NOWEB
+  };
+
+  var HOTTYPES=/^(hairdresser|beauty|cosmetics|massage|restaurant|cafe|fast food|ice cream|clinic|dentist|doctors|pharmacy|veterinary|jewelry|clothes|tailor|bakery|sweets|confectionery|furniture|electronics|mobile phone|optician|gift|florist|photographer|carpenter|electrician|plumber)$/;
+
+  function rate(d){
+    var s=1,why=[];
+    if(d.phone){s+=2;why.push('reachable by phone')}else why.push('no phone listed');
+    if(d.hours){s+=.5;why.push('hours listed')}
+    if(d.addr){s+=.5;why.push('full address')}
+    if(d.social){s+=.5;why.push('already on social media')}
+    if(HOTTYPES.test(d.type)){s+=.75;why.push('walk-in friendly business')}
+    s=Math.max(1,Math.min(5,Math.round(s)));
+    d.score=s;d.why=why.join(' · ');
+    d.lvl=s>=4?'hot':(s===3?'warm':'cold');
+  }
+  function stars(n){var o='';for(var i=1;i<=5;i++)o+=i<=n?'★':'<s>★</s>';return o}
+  var LV={hot:'High potential',warm:'Medium potential',cold:'Low potential'};
+
+  function geocode(){
+    var q=document.getElementById('place').value.trim();
+    if(!q){say('Type a place name first.',true);return}
+    say('Finding location…');
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q))
+      .then(function(r){return r.json()})
+      .then(function(j){
+        if(!j.length){say('Could not find that place. Try a different spelling.',true);return}
+        var b=j[0].boundingbox;
+        map.fitBounds([[+b[0],+b[2]],[+b[1],+b[3]]]);
+        if(map.getZoom()<13)map.setZoom(13);
+        say('Moved to '+j[0].display_name.split(',').slice(0,2).join(',')+'. Now press “Search this area”.');
+      })
+      .catch(function(){say('Location search failed. Check your connection and try again.',true)});
+  }
+
+  function search(){
+    if(map.getZoom()<14){say('Zoom in a little more (to a neighbourhood) and search again.',true);return}
+    var b=map.getBounds(),bb=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(',');
+    var c=document.getElementById('cat').value;
+    var parts=(c==='all')?Object.keys(CATS):[c];
+    var q='[out:json][timeout:25];('+parts.map(function(k){return CATS[k]+'('+bb+');'}).join('')+');out center 400;';
+    var btns=[document.getElementById('searchBtn'),document.getElementById('mSearch')];
+    btns.forEach(function(x){x.disabled=true});
+    say('Searching this area…');
+    fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+      .then(function(r){if(!r.ok)throw 0;return r.json()})
+      .then(function(j){
+        var seen={};data=[];
+        j.elements.forEach(function(e){
+          var t=e.tags||{},lat=e.lat||(e.center&&e.center.lat),lon=e.lon||(e.center&&e.center.lon);
+          if(!lat||!lon||seen[e.type+e.id])return;seen[e.type+e.id]=1;
+          var type=(t.shop||t.amenity||t.craft||t.office||'business').replace(/_/g,' ');
+          var addr=[t['addr:housenumber'],t['addr:street'],t['addr:suburb']||t['addr:city']].filter(Boolean).join(', ');
+          var o={name:t.name,type:type,phone:t.phone||t['contact:phone']||t['contact:mobile']||t.mobile||'',addr:addr,lat:lat,lon:lon,
+            hours:t.opening_hours||'',social:!!(t.facebook||t['contact:facebook']||t.instagram||t['contact:instagram'])};
+          rate(o);data.push(o);
+        });
+        data.sort(function(a,b){return b.score-a.score||(b.phone?1:0)-(a.phone?1:0)});
+        render();
+      })
+      .catch(function(){say('The data server is busy or the area is too large. Zoom in and try again in a moment.',true)})
+      .finally(function(){btns.forEach(function(x){x.disabled=false})});
+  }
+
+  function digits(p){
+    var first=String(p).split(/[;,\/]/)[0];
+    var plus=first.indexOf('+')>-1;
+    var d=first.replace(/\D/g,'');
+    if(!d)return '';
+    if(plus)return d;
+    d=d.replace(/^0+/,'');
+    var cc=String(document.getElementById('dcc').value||'91').replace(/\D/g,'');
+    if(d.length<=10)return cc+d;
+    return d;
+  }
+
+  function current(){
+    var only=document.getElementById('onlyPhone').checked;
+    var min=+document.getElementById('minPot').value;
+    return data.filter(function(d){return (!only||d.phone)&&d.score>=min});
+  }
+
+  function render(){
+    var list=current();
+    layer.clearLayers();resEl.innerHTML='';
+    if(!list.length){resEl.innerHTML='<div class="empty">No matching businesses in this view. Try a busier area, another category, or relax the phone and potential filters.</div>';say('0 businesses found here.');return}
+    var html='';
+    list.forEach(function(d){
+      L.marker([d.lat,d.lon]).addTo(layer).bindPopup('<strong>'+esc(d.name)+'</strong><br>'+esc(d.type)+'<br>'+d.score+'/5 potential');
+      var gm='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(d.name+' '+(d.addr||d.lat+','+d.lon));
+      var acts='<a class="btn btn-line btn-sm" target="_blank" rel="noopener" href="'+gm+'">Check on Google Maps</a>';
+      var numline='';
+      if(d.phone){
+        var num=digits(d.phone);
+        var msg='Hello! I found '+d.name+' on the map and noticed you do not have a website yet. I build a simple, mobile-friendly website for local businesses for just ₹800. Can I show you a quick example?';
+        numline='<div class="numline">📞 +'+esc(num)+'</div>';
+        acts='<a class="btn btn-fill btn-sm" href="tel:+'+esc(num)+'">Call</a>'+
+             '<a class="btn btn-line btn-sm" target="_blank" rel="noopener" href="https://wa.me/'+esc(num)+'?text='+encodeURIComponent(msg)+'">WhatsApp</a>'+acts;
+      }
+      html+='<article class="card"><div class="card-top"><div><span class="tag">'+esc(d.type)+'</span><h3>'+esc(d.name)+'</h3></div>'+
+        '<div class="pot"><div class="stars" aria-label="'+d.score+' out of 5">'+stars(d.score)+'</div><div class="lvl '+d.lvl+'">'+LV[d.lvl]+'</div></div></div>'+
+        '<p>'+(d.addr?esc(d.addr):'Address not listed')+'</p>'+numline+'<div class="why">'+esc(d.why)+'</div><div class="acts">'+acts+'</div></article>';
+    });
+    resEl.innerHTML=html;
+    var hot=list.filter(function(d){return d.score>=4}).length;
+    say(list.length+' business'+(list.length>1?'es':'')+' found with no website listed · '+hot+' high potential.');
+  }
+
+  function csv(){
+    var list=current();
+    if(!list.length){say('Nothing to export yet. Run a search first.',true);return}
+    var rows=[['Name','Type','Phone (international)','Potential (1-5)','Why','Address','Latitude','Longitude','Google Maps link']];
+    list.forEach(function(d){rows.push([d.name,d.type,d.phone?'+'+digits(d.phone):'',d.score,d.why,d.addr,d.lat,d.lon,'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(d.name+' '+d.lat+','+d.lon)])});
+    var text=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"'}).join(',')}).join('\n');
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));
+    a.download='businesses-without-website.csv';
+    document.body.appendChild(a);a.click();a.remove();
+    say('CSV downloaded.');
+  }
+
+  function copyNums(){
+    var list=current().filter(function(d){return d.phone});
+    if(!list.length){say('No phone numbers to copy yet. Run a search first.',true);return}
+    var text=list.map(function(d){return d.name+' ('+d.score+'/5) - +'+digits(d.phone)}).join('\n');
+    function done(){say(list.length+' numbers copied to clipboard.')}
+    function fallback(){
+      var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';
+      document.body.appendChild(t);t.select();
+      try{document.execCommand('copy');done()}catch(e){say('Could not copy. Use Export CSV instead.',true)}
+      t.remove();
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback)}else fallback();
+  }
+
+  document.getElementById('goBtn').addEventListener('click',geocode);
+  document.getElementById('place').addEventListener('keydown',function(e){if(e.key==='Enter')geocode()});
+  document.getElementById('searchBtn').addEventListener('click',search);
+  document.getElementById('csvBtn').addEventListener('click',csv);
+  document.getElementById('copyBtn').addEventListener('click',copyNums);
+  document.getElementById('onlyPhone').addEventListener('change',render);
+  document.getElementById('minPot').addEventListener('change',render);
+  document.getElementById('dcc').addEventListener('change',render);
+  document.getElementById('mSearch').addEventListener('click',function(){document.getElementById('finder').scrollIntoView();search()});
+  document.getElementById('mCopy').addEventListener('click',copyNums);
+})();
+</script>
+</body>
+</html>
